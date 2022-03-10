@@ -35,9 +35,9 @@ class TkGUI():
 
         # Create the GUI window.
         self.root = tk.Tk()
-        self.root.title('Parameter window')
+        self.root.title('LTspice waveform viewer')
         self.parent = tk.Frame(self.root,
-                               bg='gray',
+                               bg='#dddddd',
                                )
         self.parent.pack()
         self.frames(self.parent) # Create main frames.
@@ -56,7 +56,7 @@ class TkGUI():
                                   bg='#dddddd',
                                   )
         self.btn_draw.bind('<Button-1>', self.btn_draw_click)
-        self.btn_draw.grid(row=3, column=0)
+        self.btn_draw.grid(row=3, column=0, pady=10)
 
 
     def make_frame00(self, parent, row, col):
@@ -71,7 +71,7 @@ class TkGUI():
                                 height=300,
                                 relief='solid',
                                 #borderwidth=1,
-                                bg='#ffffff',
+                                bg=parent.cget('bg'),
                                 padx=10,
                                 pady=10,
                                 )
@@ -84,13 +84,13 @@ class TkGUI():
                                            fg='#000000',
                                            bg=self.frame00.cget('bg'),
                                            )
-        self.inner_frame00.pack()
+        self.inner_frame00.pack(side=tk.LEFT)
 
         # Create an entry field and buttons to get the file path.
         self.entry_path = tk.Entry(self.inner_frame00,
                                    width=20,
                                    fg='#000000',
-                                   bg=self.frame00.cget('bg'),
+                                   bg='#ffffff',
                                    )
         self.entry_path.insert(0, 'file path')
 
@@ -124,7 +124,7 @@ class TkGUI():
                                 height=300,
                                 relief='solid',
                                 #borderwidth=1,
-                                bg='#ffffff',
+                                bg=parent.cget('bg'),
                                 padx=10,
                                 pady=10,
                                 )
@@ -139,21 +139,21 @@ class TkGUI():
                                            )
         self.inner_frame01.pack(side=tk.LEFT)
 
-        # Create check buttons.
-        self.num = 5  # The number of signals is 10 or less.
+        # Create check buttons and comboboxes.
+        self.num = 5  # The number of signals is 5 or less.
         self.color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
         self.marker_list = ['', 'x', 'o', '^', 'D', 's', 'v', '*']
         self.line_list = ['', '-', '--', '-.', ':']
         self.signal_list = self.df_col
-        self.signal_val_list = [tk.BooleanVar(value = False) for i in range(self.num)]
+        self.signal_val_list = [tk.BooleanVar(value=False) for i in range(self.num)]
         self.signal_wid_list = []
-        self.color_val_list = [tk.StringVar(value = self.color_list[i]) for i in range(self.num)]
+        self.color_val_list = [tk.StringVar(value=self.color_list[i]) for i in range(self.num)]
         self.color_wid_list = []
-        self.marker_val_list = [tk.StringVar(value = self.marker_list[0]) for i in range(self.num)]
+        self.marker_val_list = [tk.StringVar(value=self.marker_list[0]) for i in range(self.num)]
         self.marker_wid_list = []
-        self.line_val_list = [tk.StringVar(value = self.line_list[0]) for i in range(self.num)]
+        self.line_val_list = [tk.StringVar(value=self.line_list[0]) for i in range(self.num)]
         self.line_wid_list = []
-        #self.width_val_list = [tk.DoubleVar(value = 1.0) for i in range(self.num)]
+        #self.width_val_list = [tk.DoubleVar(value=1.0) for i in range(self.num)]
         #self.width_wid_list = []
         for i in range(self.num):
             if i < len(self.signal_list):
@@ -202,17 +202,27 @@ class TkGUI():
             #                                      )
             #                          )
 
+        # Create and put labels.
+        self.item_list = ['Color', 'Marker', 'Line']
+        for i, item in enumerate(self.item_list):
+            self.lbl_item = tk.Label(self.inner_frame01,
+                                     text=item,
+                                     fg='#000000',
+                                     bg=self.inner_frame01.cget('bg'),
+                                     )
+            self.lbl_item.grid(row=0, column=i+1)
+
         # Arrange each widget.
         for i in range(self.num):
-            self.signal_wid_list[i].grid(row=i, column=0, sticky=tk.W)
-            self.color_wid_list[i].grid(row=i, column=1, sticky=tk.W)
-            self.marker_wid_list[i].grid(row=i, column=2, sticky=tk.W)
-            self.line_wid_list[i].grid(row=i, column=3, sticky=tk.W)
-            #self.width_wid_list[i].grid(row=i, column=4, sticky=tk.W)
+            self.signal_wid_list[i].grid(row=i+1, column=0, sticky=tk.W, pady=5)
+            self.color_wid_list[i].grid(row=i+1, column=1, sticky=tk.W)
+            self.marker_wid_list[i].grid(row=i+1, column=2, sticky=tk.W, padx=5)
+            self.line_wid_list[i].grid(row=i+1, column=3, sticky=tk.W)
+            #self.width_wid_list[i].grid(row=i+1, column=4, sticky=tk.W)
 
     def make_frame02(self, parent, row, col):
         """Create a frame and generate widgets.
-        Select graph parameters.
+        Select parameters of axes.
         """
 
         # Create a frame.
@@ -221,14 +231,14 @@ class TkGUI():
                                 height=300,
                                 relief='solid',
                                 #borderwidth=1,
-                                bg='#ffffff',
+                                bg=parent.cget('bg'),
                                 padx=10,
                                 pady=10,
                                 )
         self.frame02.grid(row=row, column=col, sticky=tk.E+tk.W)
 
         self.inner_frame02 = tk.LabelFrame(self.frame02,
-                                           text='Set axis',
+                                           text='Set axes',
                                            padx=10,
                                            pady=10,
                                            fg='#000000',
@@ -260,12 +270,12 @@ class TkGUI():
         self.entry_x_min = tk.Entry(self.inner_frame02,
                                     width=10,
                                     fg='#000000',
-                                    bg=self.inner_frame02.cget('bg'),
+                                    bg='#ffffff',
                                     )
         self.entry_x_max = tk.Entry(self.inner_frame02,
                                     width=10,
                                     fg='#000000',
-                                    bg=self.inner_frame02.cget('bg'),
+                                    bg='#ffffff',
                                     )
         self.lbl_y = tk.Label(self.inner_frame02,
                               text='y axis',
@@ -275,17 +285,26 @@ class TkGUI():
         self.entry_y_min = tk.Entry(self.inner_frame02,
                                     width=10,
                                     fg='#000000',
-                                    bg=self.inner_frame02.cget('bg'),
+                                    bg='#ffffff',
                                     )
         self.entry_y_max = tk.Entry(self.inner_frame02,
                                     width=10,
                                     fg='#000000',
-                                    bg=self.inner_frame02.cget('bg'),
+                                    bg='#ffffff',
                                     )
         self.entry_x_min.insert(0, np.amin(self.df.index.values))
         self.entry_x_max.insert(0, np.amax(self.df.index.values))
         self.entry_y_min.insert(0, np.amin(self.df.values))
         self.entry_y_max.insert(0, np.amax(self.df.values))
+
+        self.grid_val = tk.BooleanVar(value=False)
+        self.grid_wid = tk.Checkbutton(self.inner_frame02,
+                                       variable=self.grid_val,
+                                       text='Show grid',
+                                       fg='#000000',
+                                       bg=self.inner_frame02.cget('bg'),
+                                       )
+
         # Arrange each widget.
         self.range_auto.grid(row=0, column=0, sticky=tk.W)
         self.range_manu.grid(row=1, column=0, sticky=tk.W)
@@ -293,8 +312,9 @@ class TkGUI():
         self.entry_x_min.grid(row=2, column=1, padx=10)
         self.entry_x_max.grid(row=2, column=2)
         self.lbl_y.grid(row=3, column=0)
-        self.entry_y_min.grid(row=3, column=1)
+        self.entry_y_min.grid(row=3, column=1, pady=3)
         self.entry_y_max.grid(row=3, column=2)
+        self.grid_wid.grid(row=4, column=0)
 
     def btn_browse_click(self, event):
         """A callback function.
@@ -385,7 +405,7 @@ class TkGUI():
 
         # Draw a graph.
         if self.range_val.get() == 'auto':
-            self.df_graph.plot(style=self.style_list)
+            self.df_graph.plot(style=self.style_list, grid=self.grid_val.get())
         else:
             # Get x and y ranges.
             self.x_lim = [float(self.entry_x_min.get()),
