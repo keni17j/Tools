@@ -15,10 +15,6 @@ import pandas as pd
 def main():
     """Main function."""
 
-    file_path = 'waveform.txt'
-    enc = 'utf-8'
-    df = pd.read_csv(file_path, sep='\t', encoding=enc)
-    df = df.set_index('time')
     TkGUI()
 
 class TkGUI():
