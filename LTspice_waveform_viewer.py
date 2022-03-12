@@ -417,6 +417,7 @@ class TkGUI():
             self.df_graph.plot(style=self.style_list,
                                xlim=self.x_lim,
                                ylim=self.y_lim,
+                               grid=self.grid_val.get(),
                                )
         plt.show()
 
