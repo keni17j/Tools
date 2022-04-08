@@ -178,6 +178,21 @@ def analyze_glcm(glcm):
     homogeneity = np.sum(homogeneity)
     # Maximum probability.
     mp = np.amax(glcm)
+    # Correlation.
+    mean_i = matrix_i * glcm
+    mean_i = np.sum(mean_i)
+    mean_j = matrix_j * glcm
+    mean_j = np.sum(mean_j)
+    var_i = (matrix_i - mean_i) ** 2
+    var_i = glcm * var_i
+    var_i = np.sum(var_i)
+    var_j = (matrix_j - mean_j) ** 2
+    var_j = glcm * var_j
+    var_j = np.sum(var_j)
+    correlation = (matrix_i - mean_i) * (matrix_j - mean_j)
+    correlation = correlation / np.sqrt(var_i * var_j)
+    correlation = glcm * correlation
+    correlation = np.sum(correlation)
 
     feats = {}
     feats['asm'] = asm
@@ -185,6 +200,7 @@ def analyze_glcm(glcm):
     feats['dissimilarity'] = dissimilarity
     feats['contrast'] = contrast
     feats['mp'] = mp
+    feats['correlation'] = correlation
 
     return feats
 
