@@ -8,7 +8,7 @@ Introduce two ways for getting peaks.
 Use a dummy data that is quadratic function datas with noise.
 ## analyze_grayscale_images.py
 Get features from a grayscale image.
-The GLCM also be used.
+The GLCM and the NGTDM also be used.
 
 # Description
 

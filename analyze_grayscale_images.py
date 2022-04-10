@@ -13,7 +13,7 @@ def main():
 
     # Load an image as grayscale.
     img = load_img()
-    assert img.ndim==2, 'The image is not 2-dimentional ndarray.'
+    assert img.ndim == 2, 'The image is not 2-dimentional ndarray.'
 
     # Statistics.
     feats_stats = get_stats(img)
@@ -25,6 +25,7 @@ def main():
     feats_glcm = analyze_glcm(glcm)
     # NGTDM.
     ngtdm = get_ngtdm(img)
+    feats_ngtdm = analyze_ngtdm(ngtdm)
 
     all_features = feats_stats.copy()
     all_features.update(h_pp=h_pp,
@@ -33,6 +34,7 @@ def main():
                         v_diff=v_diff,
                         )
     all_features.update(feats_glcm)
+    all_features.update(feats_ngtdm)
 
     for key in all_features:
         print(key, all_features[key])
@@ -47,6 +49,7 @@ def load_img():
                     [20,20,20,20,20],
                     [25,25,10,25,25],
                     ])
+    img = img * 10
 
     return img
 
@@ -59,14 +62,14 @@ def get_stats(img):
     img_med = np.median(img)
     img_std = np.std(img, ddof=0)
 
-    feats = {}
-    feats['min'] = img_min
-    feats['max'] = img_max
-    feats['mean'] = img_mean
-    feats['median'] = img_med
-    feats['std'] = img_std
+    feats_dict = {}
+    feats_dict['min'] = img_min
+    feats_dict['max'] = img_max
+    feats_dict['mean'] = img_mean
+    feats_dict['median'] = img_med
+    feats_dict['std'] = img_std
 
-    return feats
+    return feats_dict
 
 
 def get_pp(img):
@@ -99,13 +102,13 @@ def get_diff(img):
     h_diff = img[:, :-1] - img[:, 1:]
     h_diff = np.abs(h_diff)
     h_diff = np.sum(h_diff)
-    base = (img.shape[1] - 1) * img.shape[0]
+    base = (img.shape[1]-1) * img.shape[0]
     h_diff = h_diff / base
     # Vertical direction.
     v_diff = img[:-1] - img[1:]
     v_diff = np.abs(v_diff)
     v_diff = np.sum(v_diff)
-    base = (img.shape[0] - 1) * img.shape[1]
+    base = (img.shape[0]-1) * img.shape[1]
     v_diff = v_diff / base
 
     return h_diff, v_diff
@@ -140,10 +143,8 @@ def get_glcm(img):
             # Get values arround the target pixel.
             filtered = img_pad[i:i+3, j:j+3]
             filtered = filtered * kernel
-            filtered = filtered.flatten()
             # Remove elements that equal to 0.
-            idx_list = np.nonzero(filtered)
-            filtered = filtered[idx_list]
+            filtered = filtered[filtered>0]
             # Count up the GLCM.
             for k in filtered:
                 glcm[target-1, k-1] += 1
@@ -154,55 +155,52 @@ def get_glcm(img):
 
 
 def analyze_glcm(glcm):
-    """Calculate features from the GLCM matrix."""
+    """Calculate features from the GLCM."""
 
     # Anglar second moment (energy, uniformity).
     asm = np.sum(glcm ** 2)
     # Entropy.
-    entropy = glcm[glcm>0] * np.log(glcm[glcm>0])
+    entropy = glcm[glcm>0] * np.log2(glcm[glcm>0])
     entropy = -np.sum(entropy)
     # Dissimilarity.
-    matrix_i = np.arange(glcm.shape[1])
-    matrix_j = np.arange(glcm.shape[0])
-    matrix_i, matrix_j = np.meshgrid(matrix_i, matrix_j)
-    dissimilarity = np.abs(matrix_i - matrix_j)
-    dissimilarity = glcm * dissimilarity
+    mat_i = np.arange(glcm.shape[1])
+    mat_j = np.arange(glcm.shape[0])
+    mat_i, mat_j = np.meshgrid(mat_i, mat_j)
+    dissimilarity = glcm * np.abs(mat_i-mat_j)
     dissimilarity = np.sum(dissimilarity)
     # Contrast.
-    contrast = (matrix_i - matrix_j) ** 2
-    contrast = glcm * contrast
+    contrast = glcm * (mat_i-mat_j)**2
     contrast = np.sum(contrast)
     # Homogeneity.
-    homogeneity = (matrix_i - matrix_j) ** 2
-    homogeneity = glcm / (1 + homogeneity)
+    homogeneity = glcm / (1+np.abs(mat_i-mat_j))
     homogeneity = np.sum(homogeneity)
     # Maximum probability.
     mp = np.amax(glcm)
     # Correlation.
-    mean_i = matrix_i * glcm
+    mean_i = mat_i * glcm
     mean_i = np.sum(mean_i)
-    mean_j = matrix_j * glcm
+    mean_j = mat_j * glcm
     mean_j = np.sum(mean_j)
-    var_i = (matrix_i - mean_i) ** 2
+    var_i = (mat_i-mean_i) ** 2
     var_i = glcm * var_i
     var_i = np.sum(var_i)
-    var_j = (matrix_j - mean_j) ** 2
+    var_j = (mat_j-mean_j) ** 2
     var_j = glcm * var_j
     var_j = np.sum(var_j)
-    correlation = (matrix_i - mean_i) * (matrix_j - mean_j)
-    correlation = correlation / np.sqrt(var_i * var_j)
+    correlation = (mat_i-mean_i) * (mat_j-mean_j)
+    correlation = correlation / np.sqrt(var_i*var_j)
     correlation = glcm * correlation
     correlation = np.sum(correlation)
 
-    feats = {}
-    feats['asm'] = asm
-    feats['entropy'] = entropy
-    feats['dissimilarity'] = dissimilarity
-    feats['contrast'] = contrast
-    feats['mp'] = mp
-    feats['correlation'] = correlation
+    feats_dict = {}
+    feats_dict['asm'] = asm
+    feats_dict['entropy'] = entropy
+    feats_dict['dissimilarity'] = dissimilarity
+    feats_dict['glcm_contrast'] = contrast
+    feats_dict['mp'] = mp
+    feats_dict['correlation'] = correlation
 
-    return feats
+    return feats_dict
 
 
 def get_ngtdm(img):
@@ -236,16 +234,94 @@ def get_ngtdm(img):
             filtered = np.sum(filtered) / 8
             ave_matrix[i, j] = filtered
 
-    # Generate the NGTDM from the average value matrix.
+    # Generate the NGTDM parameters.
+    # si: The sum of absolute differences.
     ave_matrix = tgt_matrix - ave_matrix
     ave_matrix = np.abs(ave_matrix)
-    ngtdm = np.zeros(step)
+    si = np.zeros(step)
     for i in range(step):
         val = ave_matrix[tgt_matrix==i]
         val = np.sum(val)
-        ngtdm[i] = val
+        si[i] = val
+    # pi: Probability.
+    img = img[1:-1, 1:-1]
+    ni = np.arange(step)
+    for i in ni:
+        ni[i] = np.count_nonzero(img==i)
+    pi = ni / np.sum(ni)
+
+    ngtdm = {}
+    ngtdm['ni'] = ni
+    ngtdm['pi'] = pi
+    ngtdm['si'] = si
 
     return ngtdm
+
+
+def analyze_ngtdm(ngtdm):
+    """Calculate features from the NGTDM."""
+
+    ni = ngtdm['ni']
+    pi = ngtdm['pi']
+    si = ngtdm['si']
+
+    # ngp: The number of gray levels where pi > 0.
+    ngp = np.count_nonzero(pi)
+    # nvp: The total number of pixels.
+    nvp = np.sum(ni)
+
+    # Coarseness.
+    coarseness = pi * si
+    coarseness = np.sum(coarseness)
+    if coarseness == 0:
+        coarseness = 1e6
+        print('Devided by 0 when calculating the coarseness.')
+    else:
+        coarseness = 1 / coarseness
+    # Contrast.
+    mat_pi, mat_pj = np.meshgrid(pi, pi)
+    mat_i = np.arange(len(pi))
+    mat_i, mat_j = np.meshgrid(mat_i, mat_i)
+    if ngp == 1:
+        contrast = 0
+        print('Devided by 0 when calculating the contrast.')
+    else:
+        contrast = 1 / (ngp*(ngp-1))
+        contrast = contrast * np.sum(mat_pi*mat_pj*(mat_i-mat_j)**2)
+        contrast = contrast / nvp * np.sum(si)
+    # Busyness.
+    if ngp == 1:
+        busyness = 0
+        print('Devided by 0 when calculating the busyness.')
+    else:
+        busyness = np.sum(pi*si)
+        busyness = busyness / np.sum(np.abs(mat_i*mat_pi-mat_j*mat_pj))
+    # Complexity.
+    mask_pi = mat_pi > 0
+    mask_pj = mat_pj > 0
+    mask = np.logical_and(mask_pi, mask_pj)
+    mat_si, mat_sj = np.meshgrid(si, si)
+    complexity = np.abs(mat_i-mat_j) * (mat_pi*mat_si+mat_pj*mat_sj)
+    complexity = complexity[mask]
+    complexity = complexity / (mat_pi+mat_pj)[mask]
+    complexity = 1 / nvp * np.sum(complexity)
+    # Strenth.
+    strenth = (mat_pi+mat_pj) * (mat_i-mat_j)**2
+    strenth = np.sum(strenth)
+    if np.sum(si) == 0:
+        strenth = 0
+        print('Devided by 0 when calculating the strenth.')
+    else:
+        strenth = strenth / np.sum(si)
+
+    feats_dict = {}
+    feats_dict['coarseness'] = coarseness
+    feats_dict['ngtdm_contrast'] = contrast
+    feats_dict['busyness'] = busyness
+    feats_dict['complexity'] = complexity
+    feats_dict['strenth'] = strenth
+
+    return feats_dict
 
 
 if __name__ == '__main__':
