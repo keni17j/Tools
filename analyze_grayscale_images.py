@@ -231,10 +231,17 @@ def get_ngtdm(img):
             # Get the average value arround the target pixel.
             filtered = img[i:i+3, j:j+3]
             filtered = filtered * kernel
-            filtered = np.sum(filtered) / 8
+            filtered = np.sum(filtered) / np.sum(kernel)
             ave_matrix[i, j] = filtered
 
     # Generate the NGTDM parameters.
+    # ni: The number of pixels in each gray level.
+    img = img[1:-1, 1:-1]
+    ni = np.arange(step)
+    for i in ni:
+        ni[i] = np.count_nonzero(img==i)
+    # pi: Probability.
+    pi = ni / np.sum(ni)
     # si: The sum of absolute differences.
     ave_matrix = tgt_matrix - ave_matrix
     ave_matrix = np.abs(ave_matrix)
@@ -243,12 +250,6 @@ def get_ngtdm(img):
         val = ave_matrix[tgt_matrix==i]
         val = np.sum(val)
         si[i] = val
-    # pi: Probability.
-    img = img[1:-1, 1:-1]
-    ni = np.arange(step)
-    for i in ni:
-        ni[i] = np.count_nonzero(img==i)
-    pi = ni / np.sum(ni)
 
     ngtdm = {}
     ngtdm['ni'] = ni
@@ -302,8 +303,7 @@ def analyze_ngtdm(ngtdm):
     mask = np.logical_and(mask_pi, mask_pj)
     mat_si, mat_sj = np.meshgrid(si, si)
     complexity = np.abs(mat_i-mat_j) * (mat_pi*mat_si+mat_pj*mat_sj)
-    complexity = complexity[mask]
-    complexity = complexity / (mat_pi+mat_pj)[mask]
+    complexity = complexity[mask] / (mat_pi+mat_pj)[mask]
     complexity = 1 / nvp * np.sum(complexity)
     # Strenth.
     strenth = (mat_pi+mat_pj) * (mat_i-mat_j)**2
