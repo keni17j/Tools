@@ -9,6 +9,8 @@ Use a dummy data that is quadratic function datas with noise.
 ## analyze_grayscale_images.py
 Get features from a grayscale image.
 The GLCM and the NGTDM also be used.
+## logic_analyzer.py
+Analyze datas measured by the logic analyzer.
 
 # Description
 
