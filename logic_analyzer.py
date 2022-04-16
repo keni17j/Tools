@@ -1,4 +1,9 @@
-"""Logic analyzer."""
+"""Analyze datas that measured by the logic analyzer.
+Extract datas with following conditions.
+(1) The mask signal = '1'.
+(2) Rising edges and falling edges of the clock signal.
+(3) After the ID.
+"""
 
 import os
 import sys
@@ -12,7 +17,6 @@ def main():
 
     # Read the csv file.
     file_path = input('Drag and Drop a csv file --> ')
-    #file_path = 'test.csv'
     header = 0
     enc = 'utf-8'
     df = pd.read_csv(file_path, header=header, encoding=enc)
@@ -23,7 +27,6 @@ def main():
 
     # Get indices of the period that the mask signal = 1.
     col_name = input('\n''The mask signal name --> ')
-    #col_name = 'LAT'
     mask = df[col_name].to_numpy()
     mask_rise, mask_fall = get_edge(mask)
     print('Rising edges of the mask', mask_rise)
@@ -33,7 +36,6 @@ def main():
     # Split datas using the mask.
     # Get clock edges and corresponded datas to them.
     col_name = input('\n''The clock signal name --> ')
-    #col_name = 'CLK'
     df_list = []
     for i, j in zip(mask_rise, mask_fall):
         # Extract datas when the mask signal = 1.
@@ -52,9 +54,7 @@ def main():
     # Select the data signal.
     # Search the ID data.
     col_name = input('\n''The data signal name --> ')
-    #col_name = 'DATA1'
     id = input('\n''The ID (8 bit) --> ')
-    #id = '00110101'
     data_list = []
     for df in df_list:
         data = df[col_name].to_numpy()
@@ -78,8 +78,9 @@ def main():
 
 def get_edge(sig):
     """Get edges of a signal.
-    The first edge is rising edge.
-    The final edge is falling edge.
+    There are two rules.
+    (1) The first edge is rising edge.
+    (2) The final edge is falling edge.
     """
 
     edge_rise = []
@@ -123,7 +124,7 @@ def ext_id(data, id):
 def set_format(data):
     """Set the data in the requested format.
     (1) Devide into 8 bits.
-    (2) Convert them to 'XXXX XXXX'.
+    (2) Convert to the format 'XXXX XXXX'.
     """
 
     n = len(data)
