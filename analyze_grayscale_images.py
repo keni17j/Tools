@@ -1,10 +1,11 @@
 """Get features from a grayscale image.
-Sorry, the features from the NGTDM are not calculated.
+Features of NGTDM are uncertain.
 """
 
 import os
 import sys
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -26,6 +27,9 @@ def main():
     # NGTDM.
     ngtdm = get_ngtdm(img)
     feats_ngtdm = analyze_ngtdm(ngtdm)
+
+    # Show as graphs.
+    graph(glcm, ngtdm)
 
     all_features = feats_stats.copy()
     all_features.update(h_pp=h_pp,
@@ -50,8 +54,11 @@ def load_img():
                     [25,25,10,25,25],
                     ])
     img = img * 10
+    img = img / img * 200
+    print(img)
 
     return img
+
 
 def get_stats(img):
     """Calculate statistics as features."""
@@ -187,10 +194,14 @@ def analyze_glcm(glcm):
     var_j = (mat_j-mean_j) ** 2
     var_j = glcm * var_j
     var_j = np.sum(var_j)
-    correlation = (mat_i-mean_i) * (mat_j-mean_j)
-    correlation = correlation / np.sqrt(var_i*var_j)
-    correlation = glcm * correlation
-    correlation = np.sum(correlation)
+    if (var_i==0) or (var_j==0):
+        correlation = 1
+        print('Devided by 0 when calculating the correlation.')
+    else:
+        correlation = (mat_i-mean_i) * (mat_j-mean_j)
+        correlation = correlation / np.sqrt(var_i*var_j)
+        correlation = glcm * correlation
+        correlation = np.sum(correlation)
 
     feats_dict = {}
     feats_dict['asm'] = asm
@@ -322,6 +333,32 @@ def analyze_ngtdm(ngtdm):
     feats_dict['strenth'] = strenth
 
     return feats_dict
+
+
+def graph(glcm, ngtdm):
+    """Show datas as graphs."""
+
+    w = glcm.shape[1]
+    ngtdm = ngtdm['si']
+    ngtdm = np.reshape(ngtdm, (-1, 1))
+    ngtdm = np.tile(ngtdm, (1, w))
+    fig = plt.figure(figsize=(12, 4))
+    # GLCM.
+    plt.subplot(1, 2, 1)
+    plt.imshow(glcm, vmin=0, vmax=1)
+    plt.title('GLCM')
+    plt.tick_params(which='both', direction='in')
+    plt.colorbar()
+    # NGTDM.
+    plt.subplot(1, 2, 2)
+    plt.imshow(ngtdm, vmin=0, vmax=10)
+    plt.xticks([])
+    plt.title('NGTDM')
+    plt.colorbar()
+    plt.show(block=False)
+    input('Input any keys to close.')
+    plt.close()
+    sys.exit()
 
 
 if __name__ == '__main__':
