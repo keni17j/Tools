@@ -7,6 +7,7 @@ True means no dupulication.
 import os
 import sys
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.spatial import distance
@@ -105,6 +106,7 @@ def dup_2d(df):
 
     df = pd.DataFrame(flag_list, columns=group_list, index=group_list)
     print(df)
+    graph_maha(data_list, group_list)
 
 
 def mahalanobis(data, mean=None, cov_inv=None):
@@ -145,6 +147,43 @@ def mahalanobis(data, mean=None, cov_inv=None):
     d_list = np.array(d_list)
 
     return d_list, mean, cov_inv
+
+
+def graph_maha(data_list, group_list):
+    """Draw a graph.
+    (1) Plot datas of each group.
+    (2) Draw contour lines for each group.
+    """
+
+    fig = plt.figure()
+
+    # Plot each datas.
+    for data in data_list:
+        x = data[:, 0]
+        y = data[:, 1]
+        plt.scatter(x, y)
+    plt.legend(group_list)
+    plt.tick_params(which='both', direction='in')
+
+    # Draw the Mahalanobis distance.
+    x_min, x_max = plt.xlim()
+    x_tick = np.linspace(x_min, x_max, 50)
+    y_min, y_max = plt.ylim()
+    y_tick = np.linspace(y_min, y_max, 50)
+    x_tick, y_tick = np.meshgrid(x_tick, y_tick)
+    for data in data_list:
+        d_list, mean, cov_inv = mahalanobis(data)
+        d_max = np.amax(d_list)
+        # Get distances for each point in the grid (x_tick, y_tick).
+        z = []
+        for i, j in zip(x_tick, y_tick):
+            z_temp = np.vstack((i, j)).T
+            z_temp, _, _ = mahalanobis(z_temp, mean, cov_inv)
+            z.append(z_temp)
+        # Draw the line.
+        plt.contour(x_tick, y_tick, z, levels=[d_max,])
+
+    plt.show()
 
 
 if __name__ == '__main__':
